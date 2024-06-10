@@ -8,7 +8,7 @@ import logging
 
 import broadlink
 
-from .electrolux import electrolux, create_from_device, DEVICE_TYPE
+from .electrolux import Electrolux, create_from_device, DEVICE_TYPE
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -106,34 +106,34 @@ class ElectroluxClimateEntity(ClimateEntity):
 
     def convert_to_hvacmode(self, state: int) -> str:
         match state:
-            case electrolux.mode.AUTO.value: 
+            case Electrolux.mode.AUTO.value:
                 return HVACMode.AUTO
-            case electrolux.mode.COOL.value: 
+            case Electrolux.mode.COOL.value:
                 return HVACMode.COOL
-            case electrolux.mode.HEAT.value:
+            case Electrolux.mode.HEAT.value:
                 return HVACMode.HEAT
-            case electrolux.mode.HEAT_8.value:
+            case Electrolux.mode.HEAT_8.value:
                 return HVACMode.HEAT_COOL
-            case electrolux.mode.DRY.value: 
+            case Electrolux.mode.DRY.value:
                 return HVACMode.DRY
-            case electrolux.mode.FAN.value: 
+            case Electrolux.mode.FAN.value:
                 return HVACMode.FAN_ONLY
             case _:
                 return HVACMode.AUTO
 
     def convert_to_fanmode(self, state: int) -> str:
         match state:
-            case electrolux.fan.AUTO.value: 
+            case Electrolux.fan.AUTO.value:
                 return FAN_AUTO
-            case electrolux.fan.LOW.value: 
+            case Electrolux.fan.LOW.value:
                 return FAN_LOW
-            case electrolux.fan.MID.value: 
+            case Electrolux.fan.MID.value:
                 return FAN_MEDIUM
-            case electrolux.fan.HIGH.value: 
+            case Electrolux.fan.HIGH.value:
                 return FAN_HIGH
-            case electrolux.fan.TURBO.value: 
+            case Electrolux.fan.TURBO.value:
                 return FAN_TURBO
-            case electrolux.fan.QUIET.value: 
+            case Electrolux.fan.QUIET.value:
                 return FAN_QUIET
             case _:
                 return FAN_AUTO
@@ -156,22 +156,22 @@ class ElectroluxClimateEntity(ClimateEntity):
     def turn_off(self):
         self.device.set_power(False)
 
-    def convert_to_ele_mode(self, mode: HVACMode) -> electrolux.mode:
+    def convert_to_ele_mode(self, mode: HVACMode) -> Electrolux.mode:
         match mode:
             case HVACMode.AUTO: 
-                return electrolux.mode.AUTO
+                return Electrolux.mode.AUTO
             case HVACMode.HEAT: 
-                return electrolux.mode.HEAT
+                return Electrolux.mode.HEAT
             case HVACMode.HEAT_COOL: 
-                return electrolux.mode.HEAT_8
+                return Electrolux.mode.HEAT_8
             case HVACMode.COOL: 
-                return electrolux.mode.COOL
+                return Electrolux.mode.COOL
             case HVACMode.DRY: 
-                return electrolux.mode.DRY
+                return Electrolux.mode.DRY
             case HVACMode.FAN_ONLY: 
-                return electrolux.mode.FAN
+                return Electrolux.mode.FAN
             case _:
-                return electrolux.mode.AUTO
+                return Electrolux.mode.AUTO
 
     def set_hvac_mode(self, hvac_mode):
         if hvac_mode == HVACMode.OFF and self.hvac_mode != HVACMode.OFF:
@@ -181,20 +181,20 @@ class ElectroluxClimateEntity(ClimateEntity):
                 self.device.set_power(True)
             self.device.set_mode(self.convert_to_ele_mode(hvac_mode))
 
-    def convert_to_ele_fan(self, fan_mode: t.Literal) -> electrolux.fan:
+    def convert_to_ele_fan(self, fan_mode: t.Literal) -> Electrolux.fan:
         if fan_mode == FAN_AUTO:
-            return electrolux.fan.AUTO
+            return Electrolux.fan.AUTO
         if fan_mode == FAN_LOW:
-            return electrolux.fan.LOW
+            return Electrolux.fan.LOW
         if fan_mode == FAN_MEDIUM:
-            return electrolux.fan.MID
+            return Electrolux.fan.MID
         if fan_mode == FAN_HIGH:
-            return electrolux.fan.HIGH
+            return Electrolux.fan.HIGH
         if fan_mode == FAN_TURBO:
-            return electrolux.fan.TURBO
+            return Electrolux.fan.TURBO
         if fan_mode == FAN_QUIET:
-            return electrolux.fan.QUIET
-        return electrolux.fan.AUTO
+            return Electrolux.fan.QUIET
+        return Electrolux.fan.AUTO
 
     def set_fan_mode(self, fan_mode):
         self.device.set_fan(self.convert_to_ele_fan(fan_mode))
@@ -209,7 +209,7 @@ class ElectroluxClimateEntity(ClimateEntity):
     async def async_setup(self):
         """Set up the device and related entities."""
         
-        self.device = electrolux(
+        self.device = Electrolux(
             self.host, 
             self.mac, 
             DEVICE_TYPE,

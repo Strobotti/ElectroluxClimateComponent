@@ -1,30 +1,26 @@
 """Config flow for Electrolux Climate."""
-from pickle import NONE
-import broadlink
-import base64
-import json
 import errno
 import socket
-import voluptuous as vol
 from functools import partial
+
+import broadlink
 import homeassistant.helpers.config_validation as cv
-
-from homeassistant import data_entry_flow
-from homeassistant.components import dhcp
-from homeassistant.config_entries import ConfigFlow
-from homeassistant import config_entries
-
+import voluptuous as vol
 from broadlink.exceptions import (
     NetworkTimeoutError,
 )
-
-from .electrolux import DEVICE_TYPE
-from .const import DOMAIN, DEFAULT_MIN, DEFAULT_MAX
-from homeassistant.const import CONF_HOST, CONF_TIMEOUT, CONF_NAME, CONF_MAC
+from homeassistant import config_entries
+from homeassistant import data_entry_flow
+from homeassistant.components import dhcp
 from homeassistant.components.climate.const import ATTR_MAX_TEMP, ATTR_MIN_TEMP
+from homeassistant.config_entries import ConfigFlow
+from homeassistant.const import CONF_HOST, CONF_TIMEOUT, CONF_NAME, CONF_MAC
+
+from .const import DOMAIN, DEFAULT_MIN, DEFAULT_MAX
+from .electrolux import DEVICE_TYPE
+
 
 class ElectroluxClimateConfigFlow(ConfigFlow, domain=DOMAIN):
-
     VERSION = 2
 
     def __init__(self):
@@ -45,7 +41,7 @@ class ElectroluxClimateConfigFlow(ConfigFlow, domain=DOMAIN):
             "model": device.model,
             "host": device.host[0],
         }
-            
+
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> data_entry_flow.FlowResult:
         """Handle dhcp discovery."""
 
@@ -71,7 +67,7 @@ class ElectroluxClimateConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_device(device)
         return await self.async_step_finish()
-    
+
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         errors = {}
@@ -122,7 +118,7 @@ class ElectroluxClimateConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(data_schema),
             errors=errors,
         )
-    
+
     async def async_step_finish(self, user_input=None):
         """Choose a name for the device and create config entry."""
         device = self.device

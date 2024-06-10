@@ -1,29 +1,19 @@
 import json
-import typing as t
-import base64
-import json
-import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 import logging
+import typing as t
 
 import broadlink
-
-from .electrolux import electrolux, create_from_device, DEVICE_TYPE
-
+from broadlink.const import DEFAULT_TIMEOUT
+from broadlink.exceptions import AuthenticationError, NetworkTimeoutError, BroadlinkException
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
-
-from broadlink.const import DEFAULT_TIMEOUT
-from broadlink.exceptions import AuthenticationError, NetworkTimeoutError, BroadlinkException
-
-from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
+from .electrolux import Electrolux, create_from_device, DEVICE_TYPE
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, add_entities_async) -> bool:
@@ -37,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, add_entitie
     sn = ""
 
     discovery = broadlink.discover(discover_ip_address=host)
-    
+
     if len(discovery) > 0 and discovery[0].devtype == 0x4f9b:
         statusJson = json.loads(create_from_device(discovery[0]).get_status())
         logging.info(statusJson)
@@ -52,23 +42,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, add_entitie
     if sn == "":
         return False
 
-    ledDev = ElectroluxClimateLedEntity(hass, entry, sn, name, entry.data[CONF_NAME], (host, broadlink.DEFAULT_PORT), mac)
+    ledDev = ElectroluxClimateLedEntity(hass, entry, sn, name, entry.data[CONF_NAME], (host, broadlink.DEFAULT_PORT),
+                                        mac)
     await ledDev.async_setup()
 
     add_entities_async([ledDev], True)
 
     return True
 
+
 class ElectroluxClimateLedEntity(SwitchEntity):
 
-    def __init__(self, 
-        hass: HomeAssistant,
-        config: ConfigEntry,
-        sn: str,
-        name: str,
-        dev_name: str,
-        host: t.Tuple[str, int],
-        mac: t.Union[bytes, str]):
+    def __init__(self,
+                 hass: HomeAssistant,
+                 config: ConfigEntry,
+                 sn: str,
+                 name: str,
+                 dev_name: str,
+                 host: t.Tuple[str, int],
+                 mac: t.Union[bytes, str]):
         super().__init__()
         self.hass = hass
         self.config = config
@@ -77,7 +69,7 @@ class ElectroluxClimateLedEntity(SwitchEntity):
         self.mac = mac
 
         self.sn = sn
-        self._attr_unique_id = sn + "-led" #mac.hex().lower().replace(":", "")
+        self._attr_unique_id = sn + "-led"  #mac.hex().lower().replace(":", "")
         self._attr_name = name + " LED"
         self.dev_name = dev_name + " LED"
 
@@ -97,15 +89,15 @@ class ElectroluxClimateLedEntity(SwitchEntity):
 
     async def async_setup(self):
         """Set up the device and related entities."""
-        
-        self.device = electrolux(
-            self.host, 
-            self.mac, 
+
+        self.device = Electrolux(
+            self.host,
+            self.mac,
             DEVICE_TYPE,
-            DEFAULT_TIMEOUT, 
-            self.dev_name, 
-            "", 
-            "Electrolux", 
+            DEFAULT_TIMEOUT,
+            self.dev_name,
+            "",
+            "Electrolux",
             False)
 
         try:
@@ -123,7 +115,7 @@ class ElectroluxClimateLedEntity(SwitchEntity):
             return False
 
         return True
-    
+
     @property
     def device_info(self) -> dr.DeviceInfo:
         """Return device info."""

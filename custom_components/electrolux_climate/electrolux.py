@@ -11,16 +11,20 @@ MAX_TEMP = 40
 MIN_TEMP = 0
 DEVICE_TYPE = 0x4f9b
 
-def create_from_device(device: Device):
-    return electrolux(device.host, device.mac, device.devtype, device.timeout, device.name, "", "Electrolux", device.is_locked)
 
-class electrolux(Device):
+def create_from_device(device: Device):
+    return Electrolux(device.host, device.mac, device.devtype, device.timeout, device.name, "", "Electrolux",
+                      device.is_locked)
+
+
+class Electrolux(Device):
     """Controls an electrolux air conditioner.
     """
 
     TYPE = "ELECTROLUX_OEM"
 
-    def __init__(self, host: t.Tuple[str, int], mac: t.Union[bytes, str], devtype: int, timeout: int = ..., name: str = "", model: str = "", manufacturer: str = "", is_locked: bool = False) -> None:
+    def __init__(self, host: t.Tuple[str, int], mac: t.Union[bytes, str], devtype: int, timeout: int = ...,
+                 name: str = "", model: str = "", manufacturer: str = "", is_locked: bool = False) -> None:
         super().__init__(host, mac, devtype, timeout, name, model, manufacturer, is_locked)
         self.auth()
 
@@ -63,13 +67,13 @@ class electrolux(Device):
 
     def set_temp(self, temp: int) -> str:
         temp = max(MIN_TEMP, min(temp, MAX_TEMP))
-        resp = self._send(0x17, bytearray('{"temp":%s}'%(temp), "ascii"))
+        resp = self._send(0x17, bytearray('{"temp":%s}' % (temp), "ascii"))
         return str(resp, "ascii")
 
     def set_power(self, power_on: bool) -> str:
-        resp = self._send(0x18, bytearray('{"ac_pwr":%s}'%(1 if power_on else 0), "ascii"))
+        resp = self._send(0x18, bytearray('{"ac_pwr":%s}' % (1 if power_on else 0), "ascii"))
         return str(resp, "ascii")
-    
+
     class mode(IntEnum):
         AUTO = 4,
         COOL = 0,
@@ -79,9 +83,9 @@ class electrolux(Device):
         HEAT_8 = 6
 
     def set_mode(self, mode: mode) -> str:
-        resp = self._send(0x19, bytearray('{"ac_mode":%s}'%(mode.value), "ascii"))
+        resp = self._send(0x19, bytearray('{"ac_mode":%s}' % (mode.value), "ascii"))
         return str(resp, "ascii")
-    
+
     class fan(IntEnum):
         AUTO = 0,
         LOW = 1,
@@ -91,31 +95,30 @@ class electrolux(Device):
         QUIET = 5
 
     def set_fan(self, fan: fan) -> str:
-        resp = self._send(0x19, bytearray('{"ac_mark":%s}'%(fan.value), "ascii"))
+        resp = self._send(0x19, bytearray('{"ac_mark":%s}' % (fan.value), "ascii"))
         return str(resp, "ascii")
 
     def set_swing(self, swing_on: bool) -> str:
-        resp = self._send(0x19, bytearray('{"ac_vdir":%s}'%(1 if swing_on else 0), "ascii"))
+        resp = self._send(0x19, bytearray('{"ac_vdir":%s}' % (1 if swing_on else 0), "ascii"))
         return str(resp, "ascii")
 
     def set_led(self, led_on: bool) -> str:
-        resp = self._send(0x19, bytearray('{"scrdisp":%s}'%(1 if led_on else 0), "ascii"))
+        resp = self._send(0x19, bytearray('{"scrdisp":%s}' % (1 if led_on else 0), "ascii"))
         return str(resp, "ascii")
 
     def set_sleep(self, sleep_on: bool) -> str:
-        resp = self._send(0x18, bytearray('{"ac_slp":%s}'%(1 if sleep_on else 0), "ascii"))
+        resp = self._send(0x18, bytearray('{"ac_slp":%s}' % (1 if sleep_on else 0), "ascii"))
         return str(resp, "ascii")
 
     def set_self_clean(self, clean_on: bool) -> str:
-        resp = self._send(0x18, bytearray('{"mldprf":%s}'%(1 if clean_on else 0), "ascii"))
+        resp = self._send(0x18, bytearray('{"mldprf":%s}' % (1 if clean_on else 0), "ascii"))
         return str(resp, "ascii")
 
     def set_timer(self, on_timer: bool, hours: int, minutes: int) -> str:
-
         hours = max(0, min(hours, 23))
         minutes = max(0, min(minutes, 59))
 
-        resp = self._send(0x1f, bytearray('{"timer":"%02d%02d|0%s"}'%(hours,minutes,1 if on_timer else 0), "ascii"))
+        resp = self._send(0x1f, bytearray('{"timer":"%02d%02d|0%s"}' % (hours, minutes, 1 if on_timer else 0), "ascii"))
         return str(resp, "ascii")
 
     def clear_timer(self, on_timer: bool) -> str:
